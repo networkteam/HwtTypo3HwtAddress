@@ -75,6 +75,19 @@
 			<trans-unit id="flexform_setting.orderDirection.desc" xml:space="preserve">
 				<target>absteigend</target>
 			</trans-unit>
+            
+            
+
+			<trans-unit id="flexform_tab.template" xml:space="preserve">
+				<target>Template</target>
+			</trans-unit>
+			<trans-unit id="flexform_setting.templateVariant" xml:space="preserve">
+				<target>Template-Variante</target>
+			</trans-unit>
+			<trans-unit id="flexform_setting.templateVariant.example" xml:space="preserve">
+				<target>Beispiel</target>
+			</trans-unit>
+       
 
 
 			<trans-unit id="extmgm.enableRelationsInPages" xml:space="preserve">
