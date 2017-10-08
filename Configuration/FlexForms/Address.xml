@@ -212,7 +212,7 @@
                                 <!--
                                 ToDo: Remove items in depending on choosen controller action
                                 Core Issue: Missing possibility for dynamic parameter
-                                <itemsProcFunc>Hwt\HwtAddress\Hooks\ItemsProcFunc->user_templateVariant</itemsProcFunc>
+                                <itemsProcFunc>Hwt\HwtAddress\UserFunc\ItemsProcFunc->user_templateVariant</itemsProcFunc>
                                 -->
                                 <items>
                                     <numIndex index="0" type="array">
