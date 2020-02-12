@@ -214,12 +214,7 @@
                     <settings.templateVariantSingle>
                         <TCEforms>
                             <label>LLL:EXT:hwt_address/Resources/Private/Language/locallang_be.xlf:flexform_setting.templateVariantSingle</label>
-                            <displayCond>
-                                <OR>
-                                    <numIndex index="0">FIELD:sDEF.switchableControllerActions:=:Address->list;Address->single</numIndex>
-                                    <numIndex index="1">FIELD:sDEF.switchableControllerActions:=:Address->single</numIndex>
-                                </OR>
-                            </displayCond>
+                            <displayCond>FIELD:sDEF.switchableControllerActions:=:Address->single</displayCond>
                             <config>
                                 <type>select</type>
                                 <renderType>selectSingle</renderType>
