@@ -17,7 +17,6 @@ $extensionKey = 'hwt_address';
         'Address' => 'list,single,search',
     ),
     array(
-        'Address' => 'list,single,search',
     )
 );
 
