@@ -33,7 +33,7 @@
                 <target>Adress-Einzelansicht</target>
             </trans-unit>
             <trans-unit id="flexform_setting.mode.address_search" xml:space="preserve">
-                <target>Adress-Suche</target>
+                <target>Adress-Suche (PLZ / Stadt)</target>
             </trans-unit>
             <trans-unit id="flexform_setting.addressSingleRecord" xml:space="preserve">
                 <target>Einzelner Adress-Datensatz</target>
@@ -53,7 +53,10 @@
                 <target>Sortierung</target>
             </trans-unit>
             <trans-unit id="flexform_setting.orderBy.sorting" xml:space="preserve">
-                <target>manuelle Sortierung</target>
+                <target>manuelle Sortierung (Speicherseite)</target>
+            </trans-unit>
+            <trans-unit id="flexform_setting.orderBy.selectedrecords" xml:space="preserve">
+                <target>ausgewählte Datensätze</target>
             </trans-unit>
             <trans-unit id="flexform_setting.orderBy.firstname" xml:space="preserve">
                 <target>Vorname</target>

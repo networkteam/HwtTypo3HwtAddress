@@ -9,7 +9,13 @@ if (!defined('TYPO3_MODE')) {
 $ll = 'LLL:EXT:hwt_address/Resources/Private/Language/locallang_db.xlf:tx_hwtaddress_domain_model_address.';
 
 // General locallang
-$llGeneral = 'LLL:EXT:lang/locallang_general.xlf:';
+if ( version_compare(TYPO3_version, '9.3.0') >= 0 ) {
+    $llGeneral = 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:';
+} elseif ( version_compare(TYPO3_version, '8.5.0') >= 0 ) {
+    $llGeneral = 'LLL:EXT:lang/Resources/Private/Language/locallang_general.xlf:';
+} else {
+    $llGeneral = 'LLL:EXT:lang/locallang_general.xlf:';
+}
 
 // TCA locallang
 $llTca = 'LLL:EXT:lang/locallang_tca.xlf:';
@@ -52,7 +58,6 @@ $extTca = array(
             company_title,company_subtitle,company_short,company_bodytext,company_images,
             phone,mobile,fax,email,www,street,building,zip,city,region,country,longitude,latitude'
     ),
-    'feInterface' => $GLOBALS['TCA']['tx_hwtaddress_domain_model_address']['feInterface'],
     'columns' => array(
         'sys_language_uid' => [
             'exclude' => true,
@@ -300,6 +305,7 @@ $extTca = array(
                 'renderType' => 'inputDateTime',
                 'size' => 12,
                 'eval' => 'date',
+                'default' => 0,
             )
         ),
 
@@ -485,7 +491,7 @@ $extTca = array(
         'links' => array(
             'exclude' => 1,
             'label' => $ll . 'links',
-            'l10n_mode' => 'exclude',
+            //'l10n_mode' => 'exclude',
             'config' => array(
                 'type' => 'inline',
                 'allowed' => 'tx_hwtaddress_domain_model_link',
@@ -647,14 +653,18 @@ $extTca = array(
                     --palette--;'.$ll.'palette.relations_address;paletteRelationsAddress,
                     --palette--;'.$ll.'palette.relations_pages;paletteRelationsPages,
 
+                --div--;'.$ll.'tabs.language,
+                    --palette--;'.$ll.'palette.language;paletteLanguage,
+
                 --div--;'.$llTtc.'tabs.access,
                     --palette--;'.$llTtc.'palette.visibility;paletteVisbility,
                     --palette--;'.$llTtc.'palette.access;paletteAccess,'
+
         ),
     ),
     'palettes' => array(
         'paletteName' => array(
-            'showitem' => 'academic, gender, --linebreak--, firstname,lastname,',
+            'showitem' => 'l10n_parent, l10n_diffsource, academic, gender, --linebreak--, firstname,lastname,',
             'canNotCollapse' => TRUE,
         ),
         'paletteEmployee' => array(
@@ -695,6 +705,11 @@ $extTca = array(
         'paletteAccess' => array(
             'showitem' => 'starttime;'.$llTtc.'starttime_formlabel, endtime;'.$llTtc.'endtime_formlabel,',
             'canNotCollapse' => TRUE,
+        ),
+        'paletteLanguage' => array(
+            'showitem' => '
+                sys_language_uid;'.$llTtc.'sys_language_uid_formlabel,l10n_parent
+            ',
         ),
     ),
 );

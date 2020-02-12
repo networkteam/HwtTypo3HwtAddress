@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Hwt\HwtAddress\Controller;
 
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2014-2018 Heiko Westermann <hwt3@gmx.de>
+ *  (c) 2014-2019 Heiko Westermann <hwt3@gmx.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -51,6 +53,8 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
         $this->addressRepository = $addressRepository;
     }
 
+
+
     /**
      * Output search form for address
      *
@@ -58,14 +62,17 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
      */
     public function searchAction() {
         // workaround cause only $zip is filled. a caching problem?
-        if ($this->request->hasArgument('city')) {
-            $city = $this->request->getArgument('city');
-        }
-        elseif ($this->request->hasArgument('zip')) {
+        if ( $this->request->hasArgument('zip') && ($this->request->getArgument('zip')!='') ) {
             $zip = $this->request->getArgument('zip');
         }
+        elseif ( $this->request->hasArgument('city') && ($this->request->getArgument('city')!='') ) {
+            $city = $this->request->getArgument('city');
+        }
+
         $this->view->assign('searchform', array('zip'=>$zip, 'city'=>$city));
     }
+
+
 
     /**
      * Outputs a list view of address
@@ -73,6 +80,9 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
      * @return void
      */
     public function listAction() {
+        /*
+         * Prepare zip or city search, if requested
+         */
         if ($this->request->hasArgument('zip') && ($this->request->getArgument('zip')!='')) {
             $zip = $this->request->getArgument('zip');
             $isSearch = TRUE;
@@ -89,26 +99,43 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
                 $isSearch = TRUE;
         }
 
-        /**
-         * array Stores UIDs of records to be assigned to the view.
+
+        /*
+         * Get address records
          */
-        $addressRecords = [];
+        $addressRecords = array();
+
+        // set default order field (equal to first flexform option)
+        if (!is_string($this->settings['orderBy'])) {
+            $this->settings['orderBy'] = 'sorting';
+        }
 
         if ($this->settings['addressStoragePages'] && ($this->settings['addressStoragePages'] != '')) {
             $addressRecords = $this->addressRepository->findInPageIds($this->settings['addressStoragePages'], $this->settings['orderBy'], $this->settings['orderDirection']);
         }
         elseif ($this->settings['list']['displayPageRelated']==1) {
-            $addressRecords = $this->addressRepository->findRelatedToPage($GLOBALS['TSFE']->id);
+            $addressRecords = $this->addressRepository->findRelatedToPage($GLOBALS['TSFE']->id, $this->settings['orderBy'], $this->settings['orderDirection']);
         }
         elseif (($this->settings['addressCategories']) || ($zip)) {
             $addressRecords = $this->addressRepository->findAllWithoutPidRestriction($this->settings['addressCategories'], $zip, $this->settings['orderBy'], $this->settings['orderDirection']);
         }
 
         if ((count($addressRecords)==0) && $this->settings['addressRecords']) {
-            $addressRecords = $this->addressRepository->findByUidInList($this->settings['addressRecords'], $this->settings['orderBy'], $this->settings['orderDirection']);
+            if ($this->settings['orderBy']==='selectedrecords') {
+                $addressRecords = $this->addressRepository->findByUidInListWithOrderList($this->settings['addressRecords'], $this->settings['addressRecords'], $this->settings['orderDirection']);
+            }
+            else {
+                $addressRecords = $this->addressRepository->findByUidInList($this->settings['addressRecords'], $this->settings['orderBy'], $this->settings['orderDirection']);
+            }
         }
-        $this->view->assign('addresses', $addressRecords);
+
+        $this->view->assignMultiple([
+            'addresses' => $addressRecords,
+            'isSearch' => $isSearch,
+        ]);
     }
+
+
 
     /**
      * Single view of a address record
@@ -117,14 +144,11 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
      * @return void
      */
     public function singleAction(\Hwt\HwtAddress\Domain\Model\Address $address = NULL) {
-        if ($address) {
-            $record = $this->addressRepository->findByUid($address);
-        }
-        elseif ( (int)$this->settings['addressSingleRecord'] > 0 ) {
+        if ( (!$address) && (int)$this->settings['addressSingleRecord'] > 0 ) {
                 // If configured, get a fallback record, if no single record is given
-            $record = $this->addressRepository->findByUid((int)$this->settings['addressSingleRecord']);
+            $address = $this->addressRepository->findByUid((int)$this->settings['addressSingleRecord']);
         }
-        elseif ( (int)$this->settings['single']['redirectIfEmptyPid'] > 0 ) {
+        elseif ( (!$address) && (int)$this->settings['single']['redirectIfEmptyPid'] > 0 ) {
                 // If configured, redirect to a page with pid, if no single record and no fallback record are given
             $this->uriBuilder->setTargetPageUid($this->settings['single']['redirectIfEmptyPid']);
             $link = $this->uriBuilder->build();
@@ -132,14 +156,14 @@ class AddressController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControll
             $this->redirectToURI($link);
         }
 
-        if ( !$record &&
+        if ( !$address &&
              is_array($this->settings['single']['recordNotFoundHandling']) &&
              isset($this->settings['single']['recordNotFoundHandling']['mode']) ) {
-
                 // Do configurable error handling, if no address record was found
+
             return $this->doConfiguredErrorHandling($this->settings['single']['recordNotFoundHandling']);
         }
-                                  
-        $this->view->assign('address', $record);
+
+        $this->view->assign('address', $address);
     }
 }

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Hwt\HwtAddress\Domain\Repository;
 
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2014 Heiko Westermann <hwt3@gmx.de>
+ *  (c) 2014-2019 Heiko Westermann <hwt3@gmx.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -33,33 +35,68 @@ namespace Hwt\HwtAddress\Domain\Repository;
  * @author Heiko Westermann <hwt3@gmx.de>
  */
 class AddressRepository extends AbstractRepository {
+    
+    use TraitCoreQueryBuilderHelper;
+    
 
     /**
      * Find addresses related to page
      *
-     * @param int $pageId page id
+     * @param int $pageId  The page id
      *
-     * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface addresses
+     * @return array  The addresses
      */
-    public function findRelatedToPage($pageId) {
-        $sql = <<<SQL
-        SELECT
-            tx_hwtaddress_domain_model_address.*,
-            tx_hwtaddress_domain_model_pages_address_mm.uid_local
-        FROM
-            tx_hwtaddress_domain_model_address
-        JOIN
-            tx_hwtaddress_domain_model_pages_address_mm
-        ON
-            tx_hwtaddress_domain_model_pages_address_mm.uid_foreign = tx_hwtaddress_domain_model_address.uid
-        WHERE
-            tx_hwtaddress_domain_model_pages_address_mm.uid_local=? AND tx_hwtaddress_domain_model_address.hidden=0 AND tx_hwtaddress_domain_model_address.deleted=0;
-SQL;
-        $parameter = array($pageId);
+    public function findRelatedToPage($pageId, $orderBy='uid', $orderDirection=null, $limit=null, $offset=null) {
+        // Create the query
+        $table = 'tx_hwtaddress_domain_model_address';
+        $tableJoin = 'tx_hwtaddress_domain_model_pages_address_mm';
 
-        $query = $this->createQuery();
-        $query->statement($sql, $parameter);
-        return $query->execute();
+        $connectionPool = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+            \TYPO3\CMS\Core\Database\ConnectionPool::class
+        );
+        $queryBuilder = $connectionPool->getQueryBuilderForTable($table);
+
+        if ( TYPO3_MODE === 'FE' ) {
+            $queryBuilder->setRestrictions(
+                \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+                    \TYPO3\CMS\Core\Database\Query\Restriction\FrontendRestrictionContainer::class
+                )
+            );
+        }
+
+        $queryBuilder
+            ->select($table . '.*', $tableJoin . '.*')
+            ->from($table)
+            ->join(
+                $table, // alias
+                $tableJoin,
+                $tableJoin, // alias
+                $queryBuilder->expr()->eq(
+                    $tableJoin . '.uid_foreign', 
+                    $queryBuilder->quoteIdentifier($table . '.uid')
+                )
+            )
+            ->where(
+                $queryBuilder->expr()->eq(
+                    $tableJoin . '.uid_local',
+                    $queryBuilder->createNamedParameter($pageId, \PDO::PARAM_INT)
+                )
+            );
+
+        $this->_setOrderingsForCoreQueryBuilder($queryBuilder, $orderBy, $orderDirection);
+        $this->_setRangeForCoreQueryBuilder($queryBuilder, $limit, $offset);
+
+        $result = $queryBuilder->execute();
+
+
+        // Map rows (array) to objects (model)
+        $dataMapper = $this->objectManager->get(
+            \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper::class
+        );
+        $items = $dataMapper->map(\Hwt\HwtAddress\Domain\Model\Address::class, $result->fetchAll());
+
+
+        return $items;
     }
 
 
@@ -67,14 +104,19 @@ SQL;
     /**
      * Find addresses without pid restriction
      *
+     * @param false|string $categories
+     * @param null|int $zip
+     * @param null|string $orderBy
+     * @param null|string $orderDirection
+     *
      * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface addresses
      */
-    public function findAllWithoutPidRestriction($categories, $zip, $orderBy, $orderDirection) {
+    public function findAllWithoutPidRestriction($categories, $zip=null, $orderBy=null, $orderDirection=null) {
         $query = $this->createQuery();
         $query->getQuerySettings()->setRespectStoragePage(FALSE);
 
         if ($zip) {
-            $zip = substr($zip, 0, 2);
+            $zip = substr($zip, 0, 5);
             //$zip = (int)$zip;
 
             // protect any result if zip is false
@@ -128,29 +170,75 @@ SQL;
      * Find addresses by uid list
      *
      * @param string $uids comma separated address uids
-     * @param string $orderBy
-     * @param string $orderDirection
+     * @param null|string $orderBy
+     * @param null|string $orderDirection
      *
      * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface addresses
      */
-    public function findByUidInList($uids, $orderBy, $orderDirection) {
-        $uids = explode(',', $uids);
+    public function findByUidInList($uids, $orderBy=null, $orderDirection=null) {
         $query = $this->createQuery();
         $query->getQuerySettings()->setRespectStoragePage(FALSE);
+
+        $uids = explode(',', $uids);
         $query->matching(
-                $query->in('uid', $uids)
+            $query->in('uid', $uids)
         );
-        if ($orderDirection == 'desc') {
-            $query->setOrderings(array(
-                $orderBy => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_DESCENDING
-            ));
-        }
-        else {
-            $query->setOrderings(array(
-                $orderBy => \TYPO3\CMS\Extbase\Persistence\QueryInterface::ORDER_ASCENDING
-            ));
-        }
+
+        $this->_setOrderings($query, $orderBy, $orderDirection);
 
         return $query->execute();
+    }
+
+
+
+    /**
+     * Find addresses by uid list, ordered by uid list
+     *
+     * @param string $uids comma separated address uids
+     * @param null|string $orderBy comma separated uid list
+     * @param null|string $orderDirection
+     *
+     * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface addresses
+     */
+    public function findByUidInListWithOrderList($uids, $orderBy=null, $orderDirection=null) {
+        // if oderBy isn't set, just order by uid list
+        if ( !$orderBy ) {
+            $orderBy = $uids;
+        }
+
+
+        // Create the query
+        $table = 'tx_hwtaddress_domain_model_address';
+
+        $connectionPool = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+            \TYPO3\CMS\Core\Database\ConnectionPool::class
+        );
+        $queryBuilder = $connectionPool->getQueryBuilderForTable($table);
+
+        if ( TYPO3_MODE === 'FE' ) {
+            $queryBuilder->setRestrictions(
+                \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+                    \TYPO3\CMS\Core\Database\Query\Restriction\FrontendRestrictionContainer::class
+                )
+            );
+        }
+
+        $queryBuilder
+            ->select('*')
+            ->from($table)
+            ->where($queryBuilder->expr()->in('uid', $uids))
+            ->add('orderBy', 'FIELD(' . $table . '.uid,' . $orderBy . ')');
+
+        $result = $queryBuilder->execute();
+
+
+        // Map rows (array) to objects (model)
+        $dataMapper = $this->objectManager->get(
+            \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper::class
+        );
+        $items = $dataMapper->map(\Hwt\HwtAddress\Domain\Model\Address::class, $result->fetchAll());
+
+
+        return $items;
     }
 }

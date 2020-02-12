@@ -1,3 +1,27 @@
+2019-12-05 Heiko Westermann <hwt3@gmx.de>
+    * Version 0.2.2-beta - Bugfix and maintenance release
+    * [FEATURE] Sort selected address records by plugin list
+    * [FEATURE] Add settings for ordering when displaying addresses related to page
+    * [FEATURE] Respect sorting, offset and limit in function 'findRelatedToPage' of address repository
+    * [FEATURE] Add TS lib, to easily display addresses related to current page
+    * [TASK] Added documentation for feature "display addresses related to page"
+    * [FEATURE] Add partial to show, when search was done but no result was found
+    * [FEATURE] Declare and fulfill compliance with php strict types
+    * [BUGFIX] Prevent "incorrect integer value" for birthday in MySQL strict mode
+    * [UPDATE] Refactor custom sql query to use query builder in function 'findRelatedToPage' of address repository
+    * [UPDATE] Fix composer deprecation for package name alias / extension key
+    * [BUGFIX] Correct requirement of TYPO3 core in composer.json to match all versions >= 8.7.x and <= 9.5.99
+    * [BUGFIX] Prevent php error, when fetching record which is already resolved by declared parameter (#7)
+    * [TASK] Replace $_EXTKEY in ext_localconf.php to be future save (breaks in TYPO3 10.x)
+    * [BUGFIX] Allow storing links on standard pages, too, otherwise related address records cannot be stored
+    * [BUGFIX] Prevent error, when 'orderBy' config is empty/null (e.g. if plugin is just inserted)
+    
+2019-06-07 Heiko Westermann <hwt3@gmx.de>
+    * Version 0.2.1-beta - Bugfix and maintenance release
+    * [UPDATE] Deprecation: #84680 - Move last language files away from ext:lang and remove ext:lang completely
+    * [TASK] Translate setting values in CmsLayout hook
+    * [MISC] Topics of 0.1.6-beta
+
 2018-10-28 Heiko Westermann <hwt3@gmx.de>
     * Version 0.2.0-beta - Compatibility and maintenance release
     * [TASK] Removed compatibility code for TYPO3 < 7.5
@@ -12,6 +36,24 @@
     * [TASK] Updated version constraints
     * [TASK] Reworked deprecated configs in plugin FlexForm, esp. 'renderType' and wizard settings
     * [TASK] Reworked usage of sl() method, deprecated in 8.2 (Deprecation: #71917)
+
+2019-06-07 Heiko Westermann <hwt3@gmx.de>
+    * Version 0.1.6-beta - Bugfix and maintenance release
+    * [BUGFIX] Correct prefilling of search form
+    * [UPDATE] Updated city/zip json data file
+    * [BUGFIX] Respect full zip in search query
+    * [FEATURE] Added city input field to search
+    * [TASK] Refactored repository functions
+    * [TASK] Refactored form and field tags of search to fluid
+    * [BUGFIX] Corrected field / parameter names in search templates
+    * [TASK] Clarified label for search mode in plugin settings
+    * [BUGFIX] Prepared single and search templates for template variants
+    * [FEATURE] Made address links translatable
+    * [BUGFIX] Made language fields of address records available in BE form
+    * [UPDATE] Deprecation: #78647 - Move language files from EXT:lang/locallang_* to Resources/Private/Language
+    * [BUGFIX] Initialize empty array for address records before using it (prevent count on NULL)
+    * [TASK] Code cleanup in controller class
+    * [TASK] Removed deprecated feInterface setting
 
 2018-10-28 Heiko Westermann <hwt3@gmx.de>
     * Version 0.1.5-beta - Maintenance release

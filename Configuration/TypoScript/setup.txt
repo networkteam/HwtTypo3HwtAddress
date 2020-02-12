@@ -60,3 +60,41 @@ plugin.tx_hwtaddress {
 		}
 	}
 }
+
+
+
+
+
+#
+# Plugin to display address records related to page
+#
+lib.tx_hwtaddress.pluginRelatedToPage = USER
+lib.tx_hwtaddress.pluginRelatedToPage {
+    userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+    extensionName = HwtAddress
+    pluginName = Address
+    vendorName = Hwt
+
+    controller = Address
+    action = list
+
+    switchableControllerActions {
+        Address {
+            1 = list
+            2 = single
+        }
+    }
+
+    settings < plugin.tx_hwtaddress
+    settings {
+        list {
+            displayPageRelated = 1
+        }
+        
+        orderBy = tx_hwtaddress_domain_model_pages_address_mm.sorting
+        #orderBy = tx_hwtaddress_domain_model_address.sorting
+        #orderBy = lastname
+        
+        #orderDirection = desc
+    }
+}

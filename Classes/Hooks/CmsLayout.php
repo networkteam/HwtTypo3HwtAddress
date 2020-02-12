@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Hwt\HwtAddress\Hooks;
 
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2015 Heiko Westermann <hwt3@gmx.de>
+ *  (c) 2015-2019 Heiko Westermann <hwt3@gmx.de>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -88,8 +90,19 @@ class CmsLayout {
 
             $this->flexformData = \TYPO3\CMS\Core\Utility\GeneralUtility::xml2array($params['row']['pi_flexform']);
 
-            $actions = $this->getFieldFromFlexform('switchableControllerActions');
 
+            $actions = $this->getFieldFromFlexform('switchableControllerActions');
+            $actionsArray = explode(';', $actions);
+            foreach ( $actionsArray as $action ) {
+                $action = strtolower(str_replace('->', '_', $action));
+                $result .= $this->getPluginLL(self::LLPATH . 'flexform_setting.mode.' . $action) . ' ';
+            }
+
+
+
+            /*
+             * Plugin settings
+             */
             $this->tableData[] = array(
                 $this->getPluginLL(self::LLPATH . 'flexform_setting.addressStoragePages'),
                 $this->getFieldFromFlexform('settings.addressStoragePages')
@@ -108,11 +121,11 @@ class CmsLayout {
                 );
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.orderBy'),
-                    $this->getFieldFromFlexform('settings.orderBy')
+                    $this->getPluginLL(self::LLPATH . 'flexform_setting.orderBy.' . $this->getFieldFromFlexform('settings.orderBy'))
                 );
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.orderDirection'),
-                    $this->getFieldFromFlexform('settings.orderDirection')
+                    $this->getPluginLL(self::LLPATH . 'flexform_setting.orderDirection.' . $this->getFieldFromFlexform('settings.orderDirection'))
                 );
             }
 
@@ -127,31 +140,36 @@ class CmsLayout {
              * Template variants
              */
             if ($actions === 'Address->single') {
+                $variantField = $this->getFieldFromFlexform('settings.templateVariantSingle', 'template');
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.templateVariantSingle'),
-                    $this->getFieldFromFlexform('settings.templateVariantSingle', 'template')
+                    ($variantField ? ucfirst($variantField) : '')
                 );
             }
             elseif (($actions === 'Address->list;Address->single')) {
+                $variantField = $this->getFieldFromFlexform('settings.templateVariantList', 'template');
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.templateVariantList'),
-                    $this->getFieldFromFlexform('settings.templateVariantList', 'template')
+                    ($variantField ? ucfirst($variantField) : '')
                 );
+
+                $variantField = $this->getFieldFromFlexform('settings.templateVariantSingle', 'template');
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.templateVariantSingle'),
-                    $this->getFieldFromFlexform('settings.templateVariantSingle', 'template')
+                    ($variantField ? ucfirst($variantField) : '')
                 );
             }
             elseif (($actions === 'Address->search')) {
+                $variantField = $this->getFieldFromFlexform('settings.templateVariantSearch', 'template');
                 $this->tableData[] = array(
                     $this->getPluginLL(self::LLPATH . 'flexform_setting.templateVariantSearch'),
-                    $this->getFieldFromFlexform('settings.templateVariantSearch', 'template')
+                    ($variantField ? ucfirst($variantField) : '')
                 );
             }
 
 
 
-            $result .= $actions . $this->renderSettingsAsTable();
+            $result .= $this->renderSettingsAsTable();
         }
 
         return $result;
